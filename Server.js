@@ -25,9 +25,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload({ useTempFiles: false }));
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+mongoose.connect(process.env.MONGODB_URI, {
+  maxPoolSize: 10, // Maintain up to 10 connections
+  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+  socketTimeoutMS: 45000, // Keep sockets open for 45s
+})
+  .then(() => console.log("✅ Connected to MongoDB"))
+  .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
