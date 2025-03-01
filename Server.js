@@ -8,9 +8,6 @@ const cloudinary = require('cloudinary').v2;
 const fileUpload = require('express-fileupload');
 const bodyParser = require('body-parser');
 
-// Middleware to parse JSON
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 // Sample Route
 app.get("/", (req, res) => {
   res.send("Hello from Express on Vercel!");
@@ -27,17 +24,24 @@ app.use(cors({
   }
 }));
 
+app.use(cors(corsOptions));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload({ useTempFiles: false }));
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("MongoDB Connected Successfully"))
-  .catch((err) => console.error("MongoDB Connection Error:", err));
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((error) => console.error('Error connecting to MongoDB:', error.message));
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
 const userSchema = new mongoose.Schema({
   username: String,
   password: String,
