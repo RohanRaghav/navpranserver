@@ -29,7 +29,7 @@ app.use(cors({
 
 app.use(fileUpload({ useTempFiles: false }));
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("MongoDB Connected Successfully"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
