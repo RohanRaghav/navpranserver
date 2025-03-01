@@ -21,15 +21,11 @@ app.use(cors({
   }
 }));
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json()); // Replace bodyParser with Express built-in
+app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ useTempFiles: false }));
 
-mongoose.connect(process.env.MONGODB_URI, {
-  maxPoolSize: 10, // Maintain up to 10 connections
-  serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-  socketTimeoutMS: 45000, // Keep sockets open for 45s
-})
+mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log("✅ Connected to MongoDB"))
   .catch(err => console.error("❌ MongoDB Connection Error:", err));
 
@@ -145,7 +141,7 @@ app.post('/api/signup', async (req, res) => {
       return res.status(400).json({ error: 'User with this phone number already exists' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 8);
     const uniqueId = await generateUniqueId(); // Generate unique ID
 
     const newUser = new User({
