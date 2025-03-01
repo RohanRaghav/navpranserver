@@ -11,7 +11,10 @@ const bodyParser = require('body-parser');
 // Middleware to parse JSON
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+// Sample Route
+app.get("/", (req, res) => {
+  res.send("Hello from Express on Vercel!");
+});
 const allowedOrigins = ["https://navpran.vercel.app"];
 app.use(cors({
   origin: function (origin, callback) {
