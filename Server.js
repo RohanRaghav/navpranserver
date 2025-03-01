@@ -28,8 +28,6 @@ app.use(cors({
 }));
 
 app.use(fileUpload({ useTempFiles: false }));
-// MongoDB connection
-const mongoose = require("mongoose");
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected Successfully"))
