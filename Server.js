@@ -9,9 +9,6 @@ const fileUpload = require('express-fileupload');
 const bodyParser = require('body-parser');
 
 // Sample Route
-app.get("/", (req, res) => {
-  res.send("Hello from Express on Vercel!");
-});
 const allowedOrigins = ["https://navpran.vercel.app"];
 app.use(cors({
   origin: function (origin, callback) {
