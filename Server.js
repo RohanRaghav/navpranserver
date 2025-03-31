@@ -6,7 +6,6 @@ require('dotenv').config();
 const app = express();
 const cloudinary = require('cloudinary').v2;
 const fileUpload = require('express-fileupload');
-const bodyParser = require('body-parser');
 
 // Sample Route
 const corsOptions = {
@@ -319,52 +318,44 @@ const transactionSchema = new mongoose.Schema({
   proofUrl: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
 });
-
-module.exports = mongoose.model("Transaction", transactionSchema);
+const Transaction = mongoose.model("Transaction", transactionSchema);
 const shareVoucher = async (req, res) => {
   try {
     const { donorId, recipientId, proofUrl } = req.body;
 
-    // Validate input
     if (!donorId || !recipientId || !proofUrl) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     }
 
-    // Find the donor
-    const donor = await Donor.findById(donorId);
-    if (!donor) {
-      return res.status(404).json({ success: false, message: "Donor not found." });
+    // Fetch donor and recipient in parallel
+    const [donor, recipient] = await Promise.all([
+      Donor.findById(donorId),
+      Donor.findOne({ uniqueId: recipientId }),
+    ]);
+
+    if (!donor || !recipient) {
+      return res.status(404).json({ success: false, message: "Donor or recipient not found." });
     }
 
-    // Find the recipient
-    const recipient = await Donor.findOne({ uniqueId: recipientId });
-    if (!recipient) {
-      return res.status(404).json({ success: false, message: "Recipient not found." });
-    }
-
-    // Share a voucher
-    if (donor.vouchers > 0) {
-      donor.vouchers -= 1;
-      recipient.vouchers += 1;
-
-      // Save the updated donor and recipient
-      await donor.save();
-      await recipient.save();
-
-      // Log the transaction
-      const transaction = new Transaction({
-        donorId,
-        recipientId,
-        proofUrl,
-        timestamp: new Date(),
-      });
-
-      await transaction.save();
-
-      return res.status(200).json({ success: true, message: "Voucher shared successfully." });
-    } else {
+    if (donor.vouchers <= 0) {
       return res.status(400).json({ success: false, message: "Insufficient vouchers." });
     }
+
+    // Update donor and recipient vouchers atomically
+    const [updatedDonor, updatedRecipient] = await Promise.all([
+      Donor.findByIdAndUpdate(donorId, { $inc: { vouchers: -1 } }, { new: true }),
+      Donor.findOneAndUpdate({ uniqueId: recipientId }, { $inc: { vouchers: 1 } }, { new: true }),
+    ]);
+
+    // Log the transaction
+    await Transaction.create({
+      donorId,
+      recipientId,
+      proofUrl,
+      timestamp: new Date(),
+    });
+
+    res.status(200).json({ success: true, message: "Voucher shared successfully." });
   } catch (error) {
     console.error("Error sharing voucher:", error);
     res.status(500).json({ success: false, message: "Internal server error." });
