@@ -20,11 +20,21 @@ app.use(cors(corsOptions));
 app.use(express.json()); // Replace bodyParser with Express built-in
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload({ useTempFiles: false }));
+const mongoUri = process.env.MONGODB_URI;
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch(err => console.error("❌ MongoDB Connection Error:", err));
+if (!mongoUri) {
+  console.error('Error: MONGODB_URI is not defined in the environment variables.');
+  process.exit(1); // Exit the process with an error code
+}
 
+mongoose.connect(mongoUri, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => {
+  console.log('Connected to MongoDB Atlas');
+}).catch((error) => {
+  console.error('Error connecting to MongoDB Atlas:', error.message);
+});
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
